@@ -2,9 +2,13 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ NTD-237 ]
+    branches:
+    - release/.*
+    - features/.*
   pull_request:
-    branches: [ NTD-237 ]
+    branches:
+    - release/.*
+    - features/.*
 
 jobs:
 

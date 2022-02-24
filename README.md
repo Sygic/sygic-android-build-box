@@ -39,6 +39,7 @@ mkdir -p $GRADLE_CACHE
 docker run --rm \
     -v "$PROJECT_DIR":/project \
     -v "$GRADLE_CACHE":"/home/builder/.gradle" \
+    -u 3142:3142 \
     -it sygic-android-build-box:snapshot \
     bash
 ```
@@ -48,6 +49,7 @@ docker run --rm \
 docker run --rm \
     -v "$PROJECT_DIR":/project \
     -v "$GRADLE_CACHE":"/home/builder/.gradle" \
+    -u 3142:3142 \
     sygic-android-build-box:snapshot \
     bash -c "cd /project && ./gradlew build"
 ```
