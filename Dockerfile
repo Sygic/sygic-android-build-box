@@ -84,6 +84,9 @@ RUN echo "sdk tools ${ANDROID_SDK_TOOLS_VERSION}" && \
     unzip -q sdk-tools.zip -d "$ANDROID_HOME" && \
     rm --force sdk-tools.zip
 
+# sdkmanager requires old removed modules
+ENV JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
+
 # Install SDKs
 # Please keep these in descending order!
 # The `yes` is for accepting all non-standard tool licenses.
