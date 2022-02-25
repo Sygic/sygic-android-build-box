@@ -14,7 +14,7 @@ RUN JDK_PLATFORM=$(if [ "$(uname -m)" = "aarch64" ]; then echo "arm64"; else ech
 ENV TZ=Europe/Bratislava
 
 # Get the latest version from https://developer.android.com/studio/index.html
-ENV ANDROID_SDK_TOOLS_VERSION="4333796"
+ENV ANDROID_SDK_TOOLS_VERSION="6200805_latest"
 
 
 # Set locale
@@ -23,8 +23,8 @@ ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8"
 
 RUN apt-get clean && \
-    apt-get update -qq && \
-    apt-get install -qq -y apt-utils locales && \
+    apt-get update && \
+    apt-get install -y apt-utils locales && \
     locale-gen $LANG
 
 ENV DEBIAN_FRONTEND="noninteractive" \
@@ -38,11 +38,12 @@ ENV PATH="$JAVA_HOME/bin:$PATH:$ANDROID_SDK_HOME/emulator:$ANDROID_SDK_HOME/tool
 
 WORKDIR /tmp
 
+
 # Installing packages
-RUN apt-get update -qq > /dev/null && \
-    apt-get install -qq locales > /dev/null && \
+RUN apt-get update > /dev/null && \
+    apt-get install locales > /dev/null && \
     locale-gen "$LANG" > /dev/null && \
-    apt-get install -qq --no-install-recommends \
+    apt-get install -y --no-install-recommends \
         autoconf \
         build-essential \
         curl \
@@ -79,13 +80,10 @@ RUN apt-get update -qq > /dev/null && \
 # Install Android SDK
 RUN echo "sdk tools ${ANDROID_SDK_TOOLS_VERSION}" && \
     wget --quiet --output-document=sdk-tools.zip \
-        "https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS_VERSION}.zip" && \
-    mkdir --parents "$ANDROID_HOME" && \
-    unzip -q sdk-tools.zip -d "$ANDROID_HOME" && \
+        "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS_VERSION}.zip" && \
+    mkdir --parents "$ANDROID_HOME"/cmdline-tools && \
+    unzip -q sdk-tools.zip -d "$ANDROID_HOME"/cmdline-tools  && \
     rm --force sdk-tools.zip
-
-# sdkmanager requires old removed modules
-ENV JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
 
 # Install SDKs
 # Please keep these in descending order!
@@ -94,12 +92,12 @@ RUN mkdir --parents "$ANDROID_HOME/.android/" && \
     echo '### User Sources for Android SDK Manager' > \
         "$ANDROID_HOME/.android/repositories.cfg" && \
     . /etc/jdk.env && \
-    yes | "$ANDROID_HOME"/tools/bin/sdkmanager --licenses > /dev/null
+    yes | "$ANDROID_HOME"/cmdline-tools/tools/bin/sdkmanager --licenses > /dev/null
 
 # List all available packages.
 # redirect to a temp file `packages.txt` for later use and avoid show progress
 RUN . /etc/jdk.env && \
-    "$ANDROID_HOME"/tools/bin/sdkmanager --list > packages.txt && \
+    "$ANDROID_HOME"/cmdline-tools/tools/bin/sdkmanager --list > packages.txt && \
     cat packages.txt | grep -v '='
 
 #
@@ -107,17 +105,17 @@ RUN . /etc/jdk.env && \
 #
 RUN echo "platforms" && \
     . /etc/jdk.env && \
-    yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
+    yes | "$ANDROID_HOME"/cmdline-tools/tools/bin/sdkmanager \
         "platforms;android-31" > /dev/null
 
 RUN echo "platform tools" && \
     . /etc/jdk.env && \
-    yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
+    yes | "$ANDROID_HOME"/cmdline-tools/tools/bin/sdkmanager \
         "platform-tools" > /dev/null
 
 RUN echo "build tools 31" && \
     . /etc/jdk.env && \
-    yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
+    yes | "$ANDROID_HOME"/cmdline-tools/tools/bin/sdkmanager \
         "build-tools;31.0.0" > /dev/null
 
 # seems there is no emulator on arm64
@@ -125,7 +123,7 @@ RUN echo "build tools 31" && \
 #RUN echo "emulator" && \
     #if [ "$(uname -m)" != "x86_64" ]; then echo "emulator only support Linux x86 64bit. skip for $(uname -m)"; exit 0; fi && \
     #. /etc/jdk.env && \
-    #yes | "$ANDROID_HOME"/tools/bin/sdkmanager "emulator" > /dev/null
+    #yes | "$ANDROID_HOME"/cmdline-tools/tools/bin/sdkmanager "emulator" > /dev/null
 
 # List sdk directory content
 RUN ls -l $ANDROID_HOME
